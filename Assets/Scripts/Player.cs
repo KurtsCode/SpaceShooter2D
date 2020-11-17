@@ -40,7 +40,7 @@ public class Player : MonoBehaviour
     private int _score;
 
     [SerializeField]
-    private int _ammo;
+    private int _ammo = 15;
 
     private Spawn_Manager _spawnManager;
     private UIManager _uiManager;
@@ -63,6 +63,8 @@ public class Player : MonoBehaviour
 
     private bool _hasAmmo;
 
+    private int _maxAmmo = 15;
+
     [SerializeField]
     private int _shieldHealth;
     
@@ -74,7 +76,6 @@ public class Player : MonoBehaviour
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<Spawn_Manager>();
         _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
         _audioSource = GetComponent<AudioSource>();
-        _ammo = 15;
         _hasAmmo = true;
         _sprintActive = false;
 
@@ -130,7 +131,7 @@ public class Player : MonoBehaviour
             Instantiate(_laserPrefab, transform.position + new Vector3(0, 1.05f, 0), Quaternion.identity);
         }
 
-        UpdateAmmo();
+        DecreaseAmmo();
 
         _audioSource.Play();
 
@@ -270,7 +271,7 @@ public class Player : MonoBehaviour
         Debug.Log("Current Score: " + _score);
     }
 
-    public void UpdateAmmo()
+    public void DecreaseAmmo()
     {
         _ammo -= 1;
         _uiManager.UpdateAmmo(_ammo);
@@ -281,6 +282,13 @@ public class Player : MonoBehaviour
         }
 
         Debug.Log("Current Score: " + _ammo);
+    }
+
+    public void RefillAmmo()
+    {
+        _ammo = _maxAmmo;
+        _uiManager.UpdateAmmo(_ammo);
+        _hasAmmo = true;
     }
 
     public void TripleShotActive()
