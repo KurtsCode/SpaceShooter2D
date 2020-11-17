@@ -56,7 +56,8 @@ public class Player : MonoBehaviour
 
     private AudioSource _audioSource;
 
-    private bool _sprintActive; 
+    private bool _sprintActive;
+
 
     
     // Start is called before the first frame update
@@ -132,12 +133,12 @@ public class Player : MonoBehaviour
 
        
         Vector3 direction = new Vector3(horizontalInput, verticalInput, 0);
-        if (Input.GetKeyDown("left shift"))
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             _sprintActive = true;
         }
         
-        if(Input.GetKeyDown("left shift"))
+        if(Input.GetKeyUp(KeyCode.LeftShift))
         {
             _sprintActive = false;
         }
@@ -145,7 +146,6 @@ public class Player : MonoBehaviour
 
         if (_sprintActive == true)
         {
-
             transform.Translate(direction * _boostSpeed * Time.deltaTime);
         }
         else
