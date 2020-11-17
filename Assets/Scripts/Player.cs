@@ -39,6 +39,9 @@ public class Player : MonoBehaviour
     [SerializeField]
     private int _score;
 
+    [SerializeField]
+    private int _ammo;
+
     private Spawn_Manager _spawnManager;
     private UIManager _uiManager;
 
@@ -58,6 +61,8 @@ public class Player : MonoBehaviour
 
     private bool _sprintActive;
 
+    private bool _hasAmmo;
+
     [SerializeField]
     private int _shieldHealth;
     
@@ -69,6 +74,8 @@ public class Player : MonoBehaviour
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<Spawn_Manager>();
         _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
         _audioSource = GetComponent<AudioSource>();
+        _ammo = 15;
+        _hasAmmo = true;
         _sprintActive = false;
 
         if(_spawnManager == null)
@@ -100,7 +107,7 @@ public class Player : MonoBehaviour
         CalculateMovement();
 
 
-        if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire)
+        if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire && _hasAmmo == true)
         {
             FireLaser();
         }
@@ -111,6 +118,7 @@ public class Player : MonoBehaviour
 
     void FireLaser()
     {
+
         _canFire = Time.time + _fireRate;
   
         if (_tripleShotActive == true)
@@ -121,6 +129,8 @@ public class Player : MonoBehaviour
         {
             Instantiate(_laserPrefab, transform.position + new Vector3(0, 1.05f, 0), Quaternion.identity);
         }
+
+        UpdateAmmo();
 
         _audioSource.Play();
 
@@ -258,6 +268,19 @@ public class Player : MonoBehaviour
         _score = _score + points;
         _uiManager.AddScore(_score);
         Debug.Log("Current Score: " + _score);
+    }
+
+    public void UpdateAmmo()
+    {
+        _ammo -= 1;
+        _uiManager.UpdateAmmo(_ammo);
+
+        if(_ammo == 0)
+        {
+            _hasAmmo = false;
+        }
+
+        Debug.Log("Current Score: " + _ammo);
     }
 
     public void TripleShotActive()
