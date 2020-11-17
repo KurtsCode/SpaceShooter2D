@@ -58,7 +58,8 @@ public class Player : MonoBehaviour
 
     private bool _sprintActive;
 
-
+    [SerializeField]
+    private int _shieldHealth;
     
     // Start is called before the first frame update
     void Start()
@@ -170,8 +171,17 @@ public class Player : MonoBehaviour
     {
         if (_shieldActive == true)
         {
-            _shieldActive = false;
-            playerShield.SetActive(false);
+            _shieldHealth -= 1;
+
+            ShieldColor(_shieldHealth);
+
+            if (_shieldHealth == 0)
+            {
+                _shieldActive = false;
+                playerShield.SetActive(false);
+                return;
+            }
+
             return;
         }
         
@@ -226,6 +236,23 @@ public class Player : MonoBehaviour
         }
 
     }
+
+    public void ShieldColor(int _shieldLevel)
+    {
+        SpriteRenderer _shieldColor = playerShield.GetComponent<SpriteRenderer>();
+        
+        if(_shieldLevel == 1)
+        {
+            _shieldColor.color = new Color(1, 0, 0, 1);
+        }
+
+        if(_shieldLevel == 2)
+        {
+            _shieldColor.color = Color.yellow;
+        }
+    }
+
+
     public void AddScore(int points)
     {
         _score = _score + points;
@@ -249,6 +276,7 @@ public class Player : MonoBehaviour
     public void ShieldActive()
     {
         _shieldActive = true;
+        _shieldHealth = 3;
         playerShield.SetActive(true);
         //StartCoroutine(ShieldPowerDownRoutine());
     }

@@ -1082,6 +1082,7 @@ MonoBehaviour:
   _rightEngine: {fileID: 2064787189}
   _laserSoundClip: {fileID: 8300000, guid: 75676f361bdfeaf41a46623e95df3dbc, type: 3}
   _explosionSoundClip: {fileID: 0}
+  _shieldHealth: 0
 --- !u!212 &1327239084
 SpriteRenderer:
   m_ObjectHideFlags: 0
