@@ -65,6 +65,10 @@ public class Player : MonoBehaviour
 
     private int _maxAmmo = 15;
 
+    private SpriteRenderer _shieldColor;
+
+    private Color _shieldColorBase;
+
     [SerializeField]
     private int _shieldHealth;
     
@@ -78,6 +82,10 @@ public class Player : MonoBehaviour
         _audioSource = GetComponent<AudioSource>();
         _hasAmmo = true;
         _sprintActive = false;
+
+        _shieldColor = playerShield.GetComponent<SpriteRenderer>();
+
+        _shieldColorBase = _shieldColor.color;
 
         if(_spawnManager == null)
         {
@@ -250,7 +258,6 @@ public class Player : MonoBehaviour
 
     public void ShieldColor(int _shieldLevel)
     {
-        SpriteRenderer _shieldColor = playerShield.GetComponent<SpriteRenderer>();
         
         if(_shieldLevel == 1)
         {
@@ -260,6 +267,11 @@ public class Player : MonoBehaviour
         if(_shieldLevel == 2)
         {
             _shieldColor.color = Color.yellow;
+        }
+
+        if(_shieldLevel >= 3)
+        {
+            _shieldColor.color = _shieldColorBase;
         }
     }
 
@@ -291,6 +303,27 @@ public class Player : MonoBehaviour
         _hasAmmo = true;
     }
 
+    public void RefillHealth()
+    {
+        if (_lives < 3)
+        {
+            _lives += 1;
+            _uiManager.UpdateLives(_lives);
+
+            if (_leftEngine.activeSelf == true)
+            {
+                Debug.Log("Active left engine");
+                _leftEngine.SetActive(false);
+            }
+            else
+            {
+                Debug.Log("Left engine already on, Active right engine");
+                _rightEngine.SetActive(false);
+            }
+        }
+  
+    }
+
     public void TripleShotActive()
     {
         _tripleShotActive = true;
@@ -308,6 +341,7 @@ public class Player : MonoBehaviour
     {
         _shieldActive = true;
         _shieldHealth = 3;
+        ShieldColor(_shieldHealth);
         playerShield.SetActive(true);
         //StartCoroutine(ShieldPowerDownRoutine());
     }

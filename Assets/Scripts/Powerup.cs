@@ -51,9 +51,12 @@ public class Powerup : MonoBehaviour
                         player.ShieldActive();
                         Debug.Log("Collected Shield");
                         break;
-
                     case 3:
                         player.RefillAmmo();
+                        Debug.Log("Replenished Ammo");
+                        break;
+                    case 4:
+                        player.RefillHealth();
                         Debug.Log("Replenished Ammo");
                         break;
                     default:
