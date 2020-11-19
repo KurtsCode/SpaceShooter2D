@@ -57,7 +57,11 @@ public class Powerup : MonoBehaviour
                         break;
                     case 4:
                         player.RefillHealth();
-                        Debug.Log("Replenished Ammo");
+                        Debug.Log("Replenished Health");
+                        break;
+                    case 5:
+                        player.HomingShotActive();
+                        Debug.Log("Collected Homing Shot");
                         break;
                     default:
                         Debug.Log("Default Value");

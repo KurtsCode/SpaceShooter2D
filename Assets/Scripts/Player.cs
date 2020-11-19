@@ -17,6 +17,9 @@ public class Player : MonoBehaviour
     public GameObject _laserPrefab;
 
     [SerializeField]
+    public GameObject _homingLaserPrefab;
+
+    [SerializeField]
     public GameObject _tripleShotPrefab;
 
     [SerializeField]
@@ -26,6 +29,9 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private bool _tripleShotActive = false;
+
+    [SerializeField]
+    private bool _homeShotActive = false;
 
     [SerializeField]
     private bool _speedBoostActive = false;
@@ -134,7 +140,11 @@ public class Player : MonoBehaviour
         {
             Instantiate(_tripleShotPrefab, transform.position, Quaternion.identity);
         }
-        else
+        else if (_homeShotActive == true)
+        {
+            Instantiate(_homingLaserPrefab, transform.position, Quaternion.identity);
+        }
+        else 
         {
             Instantiate(_laserPrefab, transform.position + new Vector3(0, 1.05f, 0), Quaternion.identity);
         }
@@ -144,6 +154,7 @@ public class Player : MonoBehaviour
         _audioSource.Play();
 
     }
+
 
 
     void CalculateMovement()
@@ -330,6 +341,12 @@ public class Player : MonoBehaviour
         StartCoroutine(TripleShotPowerDownRoutine());
     }
 
+    public void HomingShotActive()
+    {
+        _homeShotActive = true;
+        StartCoroutine(HomingShotPowerDownRoutine());
+    }
+
     public void SpeedBoostActive()
     {
         _speedBoostActive = true;
@@ -350,6 +367,12 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(5);
         _tripleShotActive = false;
+    }
+
+    IEnumerator HomingShotPowerDownRoutine()
+    {
+        yield return new WaitForSeconds(5);
+        _homeShotActive = false;
     }
 
     IEnumerator SpeedBoostPowerDownRoutine()

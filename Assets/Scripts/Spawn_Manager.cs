@@ -11,9 +11,15 @@ public class Spawn_Manager : MonoBehaviour
     private GameObject _enemyContainer;
     [SerializeField]
     public GameObject[] powerups;
-    
+
+    private int _index = 0;
+
     private bool _stopSpawning = false;
 
+    public List<GameObject> enemyList = new List<GameObject>();
+    public List<Transform> enemyPosList = new List<Transform>();
+
+    //public Transform[] enemyPosCont;
 
     public void StartSpawning()
     {
@@ -36,12 +42,21 @@ public class Spawn_Manager : MonoBehaviour
 
             newEnemy.transform.parent = _enemyContainer.transform;
 
+            StoreEnemyTransform(newEnemy);
+
+
             yield return new WaitForSeconds(5.0f);
 
         }
             
     }
              
+    public void StoreEnemyTransform(GameObject enemy)
+    {
+        Debug.Log("Enemy Position Stored");
+        enemyList.Add(enemy);
+        enemyPosList.Add(enemy.transform);
+    }
 
 
     IEnumerator SpawnPowerupRoutine()
@@ -54,7 +69,8 @@ public class Spawn_Manager : MonoBehaviour
         {
             Vector3 spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
 
-            int randomPowerUp = Random.Range(0, 5);
+            int randomPowerUp = Random.Range(0, 6);
+            Debug.Log(randomPowerUp);
 
             Instantiate(powerups[randomPowerUp], spawnPos, Quaternion.identity);
 
@@ -69,5 +85,6 @@ public class Spawn_Manager : MonoBehaviour
         Debug.Log("Spawning Stopped");
         _stopSpawning = true;
     }
+
 
 }

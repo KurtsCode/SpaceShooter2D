@@ -1151,10 +1151,13 @@ MonoBehaviour:
   _speed: 5
   _laserPrefab: {fileID: 5578185479061732430, guid: 0702e90edc805b8489b26a7c33bf8a24,
     type: 3}
+  _homingLaserPrefab: {fileID: 8797649070727179274, guid: ac1c240e7f3555645b6701bf5ba554da,
+    type: 3}
   _tripleShotPrefab: {fileID: 3762672644130420875, guid: 6446f1697fe7cdf489cb72120faee6c1,
     type: 3}
   _fireRate: 0.15
   _tripleShotActive: 0
+  _homeShotActive: 0
   _speedBoostActive: 0
   _shieldActive: 0
   _lives: 3
@@ -1747,6 +1750,9 @@ MonoBehaviour:
   - {fileID: 5508100334296632542, guid: 16117f8fc0f49ea49b9373aa48766540, type: 3}
   - {fileID: 9044659312284743686, guid: 9768694399199ec47884c5725e836b59, type: 3}
   - {fileID: 8298256135412334765, guid: 7a695ea3ca711bd45aee5e91072ab09a, type: 3}
+  - {fileID: 797040517976099385, guid: 9993b6ac9f8e22043b22e958464ccf01, type: 3}
+  enemyList: []
+  enemyPosList: []
 --- !u!4 &1998301036
 Transform:
   m_ObjectHideFlags: 0

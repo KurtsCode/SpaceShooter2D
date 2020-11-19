@@ -63,6 +63,11 @@ public class UIManager : MonoBehaviour
         {
             GameOverSequence();
         }
+
+        if(currentLives < 0)
+        {
+            Debug.LogError("Life total went into the negative");
+        }
     }
 
 
