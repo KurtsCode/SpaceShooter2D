@@ -4,15 +4,21 @@ using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
  
+    // Player movement values
     [SerializeField]
     private float _speed = 3.5f;
     private float _boostSpeed = 15.0f;
     private float _speedMultiplier = 2;
 
+    private bool _sprintActive;
+
+
+    // Imported prefabs
     [SerializeField]
     public GameObject _laserPrefab;
 
@@ -22,10 +28,49 @@ public class Player : MonoBehaviour
     [SerializeField]
     public GameObject _tripleShotPrefab;
 
+
+    // Player attack values
     [SerializeField]
     private float _fireRate = 0.5f;
 
     private float _canFire = -1f;
+
+    [SerializeField]
+    private int _ammo = 15;
+
+    private bool _hasAmmo;
+
+    private int _maxAmmo = 15;
+
+    [SerializeField]
+    private int _score;
+
+    
+    // Game Controller values
+    private Spawn_Manager _spawnManager;
+    private UIManager _uiManager;
+
+
+    // Player damage values
+    [SerializeField]
+    private int _lives = 3;
+
+    [SerializeField]
+    private GameObject _leftEngine, _rightEngine;
+
+
+
+    // Audio controller values.
+    [SerializeField]
+    private AudioClip _laserSoundClip;
+
+    [SerializeField]
+    private AudioClip _explosionSoundClip;
+
+    private AudioSource _audioSource;
+
+
+    // Power up related values.
 
     [SerializeField]
     private bool _tripleShotActive = false;
@@ -39,37 +84,11 @@ public class Player : MonoBehaviour
     [SerializeField]
     private bool _shieldActive = false;
 
-    [SerializeField]
-    private int _lives = 3;
-
-    [SerializeField]
-    private int _score;
-
-    [SerializeField]
-    private int _ammo = 15;
-
-    private Spawn_Manager _spawnManager;
-    private UIManager _uiManager;
+   
+    // Shield powerup values.
 
     [SerializeField]
     private GameObject playerShield;
-
-    [SerializeField]
-    private GameObject _leftEngine, _rightEngine;
-
-    [SerializeField]
-    private AudioClip _laserSoundClip;
-
-    [SerializeField]
-    private AudioClip _explosionSoundClip;
-
-    private AudioSource _audioSource;
-
-    private bool _sprintActive;
-
-    private bool _hasAmmo;
-
-    private int _maxAmmo = 15;
 
     private SpriteRenderer _shieldColor;
 
@@ -77,23 +96,51 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private int _shieldHealth;
-    
+
+
+    // Thruster values
+    [SerializeField]
+    private Slider thrusterMeter;
+
+    private int maxFuel = 100;
+    private int currentFuel;
+
+    private Coroutine regen;
+    private Coroutine compFill;
+    private Coroutine burnFuel;
+    private bool _thrustActive = true;
+    private bool _compFillActive = false;
+
+
     // Start is called before the first frame update
     void Start()
     {
         // Snap the player object to the origin point 0,0,0 when the game starts.
         transform.position = new Vector3(0, 0, 0);
+
+        // Find the prefabs for the Spawn and UI managers.
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<Spawn_Manager>();
         _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
-        _audioSource = GetComponent<AudioSource>();
-        _hasAmmo = true;
-        _sprintActive = false;
 
+        // Access attached audio source component.
+        _audioSource = GetComponent<AudioSource>();
+
+        // Access the Sprite Render fo the shield sprite that is chileded to the player.
         _shieldColor = playerShield.GetComponent<SpriteRenderer>();
 
         _shieldColorBase = _shieldColor.color;
 
-        if(_spawnManager == null)
+
+        // Player control checks and values.
+        _hasAmmo = true;
+        _sprintActive = false;
+
+        // Establish the starting balues for the thruster meter.
+        currentFuel = maxFuel;
+        thrusterMeter.maxValue = maxFuel;
+        thrusterMeter.value = maxFuel;
+
+        if (_spawnManager == null)
         {
             Debug.LogError("The Spawn Manager is NULL.");
         }
@@ -119,6 +166,8 @@ public class Player : MonoBehaviour
     void Update()
     {
 
+
+        ActivateThruster();
         CalculateMovement();
 
 
@@ -126,8 +175,7 @@ public class Player : MonoBehaviour
         {
             FireLaser();
         }
-
-       
+   
 
     }
 
@@ -155,6 +203,52 @@ public class Player : MonoBehaviour
 
     }
 
+    // Function that controls the amount of time a player can use the sprint function.
+    void ActivateThruster()
+    {
+
+        if(currentFuel <= 0)
+        {
+            currentFuel = 0;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && _thrustActive == true)
+        {
+            burnFuel = StartCoroutine(UseFuel(0.01f, KeyCode.LeftShift));
+
+            if (regen != null)
+            {
+                StopCoroutine(regen);
+            }
+
+            
+
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftShift) && _thrustActive == true)
+        {
+            
+            regen = StartCoroutine(RegenFuel());
+             
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftShift) && _thrustActive == false)
+        {
+            Debug.Log("Thruster Comp Fill started");
+            
+            if (_compFillActive == false)
+            {
+                compFill = StartCoroutine(CompRefillFuel());
+            }
+            
+
+            if (burnFuel != null)
+            {
+                StopCoroutine(burnFuel);
+            }
+
+            
+        }
+
+    }
 
 
     void CalculateMovement()
@@ -164,7 +258,26 @@ public class Player : MonoBehaviour
 
        
         Vector3 direction = new Vector3(horizontalInput, verticalInput, 0);
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+
+        ////////////////////////////
+       
+
+        if(currentFuel <= 0)
+        {
+            Debug.Log("Thrust deactivated");
+            _thrustActive = false;
+        }
+
+        if(currentFuel >= maxFuel)
+        {
+            Debug.Log("Thrust reactivated");
+            _thrustActive = true;
+            _compFillActive = false;
+        }
+        ////////////////////////////////
+
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && _thrustActive == true)
         {
             _sprintActive = true;
         }
@@ -173,6 +286,17 @@ public class Player : MonoBehaviour
         {
             _sprintActive = false;
         }
+
+
+        /*
+         * If the player still has fuel, then sprint can be activated.
+         * 
+         * If the player uses all fuel they must wait for the fuel bar to completely refill before they can
+         * sprint again.
+         * 
+         * 
+         */
+
 
 
         if (_sprintActive == true)
@@ -387,5 +511,64 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(5);
         _shieldActive = false;
         playerShield.SetActive(false);
+    }
+
+    IEnumerator UseFuel(float delay, KeyCode code)
+    {
+        Debug.Log("UseFuel Started");
+        while (Input.GetKey(code) && _thrustActive)
+        {
+            Debug.Log("Burning fuel");
+            currentFuel -= 1;
+            thrusterMeter.value = currentFuel;
+            yield return new WaitForSeconds(delay);
+        }
+
+        burnFuel = null;
+    }
+
+    IEnumerator RegenFuel()
+    {
+        Debug.Log("Regen active");
+        yield return new WaitForSeconds(0.5f);
+
+        while (currentFuel < maxFuel && _thrustActive == true)
+        {
+            Debug.Log("Regenning");
+            yield return new WaitForSeconds(0.02f);
+            currentFuel += 1;
+            thrusterMeter.value = currentFuel;
+        }
+
+        if (currentFuel > maxFuel)
+        {
+            currentFuel = maxFuel;
+        }
+
+        // Deletes regen once the meter hits the max.
+        regen = null;
+    }
+
+    IEnumerator CompRefillFuel()
+    {
+        _compFillActive = true;
+        Debug.Log("CompFill active");
+        yield return new WaitForSeconds(2f);
+
+        while (currentFuel < maxFuel && _thrustActive == false)
+        {
+            Debug.Log("Completely Refilling");
+            yield return new WaitForSeconds(0.002f);
+            currentFuel += 1;
+            thrusterMeter.value = currentFuel;
+        }
+
+        if (currentFuel > maxFuel)
+        {
+            currentFuel = maxFuel;
+        }
+
+        // Deletes regen once the meter hits the max.
+        compFill = null;
     }
 }
