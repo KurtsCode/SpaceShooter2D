@@ -12,14 +12,15 @@ public class Spawn_Manager : MonoBehaviour
     [SerializeField]
     public GameObject[] powerups;
 
-    private int _index = 0;
+    private int[] powerUpIds = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5};
 
     private bool _stopSpawning = false;
+    private int selectedID;
 
     public List<GameObject> enemyList = new List<GameObject>();
     public List<Transform> enemyPosList = new List<Transform>();
 
-    //public Transform[] enemyPosCont;
+
 
     public void StartSpawning()
     {
@@ -61,6 +62,8 @@ public class Spawn_Manager : MonoBehaviour
 
     IEnumerator SpawnPowerupRoutine()
     {
+        selectedID = powerUpIds[Random.Range(0, powerUpIds.Length)];
+
         Debug.Log("Spawning power-up");
 
         yield return new WaitForSeconds(3.0f);
@@ -69,8 +72,11 @@ public class Spawn_Manager : MonoBehaviour
         {
             Vector3 spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
 
-            int randomPowerUp = Random.Range(5,6);
-            Debug.Log(randomPowerUp);
+            //int randomPowerUp = Random.Range(0,6);
+
+            int randomPowerUp = powerUpIds[Random.Range(0, powerUpIds.Length)];
+
+            Debug.Log("Power Up Spawned: " + randomPowerUp);
 
             Instantiate(powerups[randomPowerUp], spawnPos, Quaternion.identity);
 

@@ -111,6 +111,8 @@ public class Player : MonoBehaviour
     private bool _thrustActive = true;
     private bool _compFillActive = false;
 
+    private ShakeWithAnim _camShake;
+
 
     // Start is called before the first frame update
     void Start()
@@ -121,6 +123,7 @@ public class Player : MonoBehaviour
         // Find the prefabs for the Spawn and UI managers.
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<Spawn_Manager>();
         _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
+        _camShake = GameObject.Find("Main Camera").GetComponent<ShakeWithAnim>();
 
         // Access attached audio source component.
         _audioSource = GetComponent<AudioSource>();
@@ -258,8 +261,6 @@ public class Player : MonoBehaviour
 
        
         Vector3 direction = new Vector3(horizontalInput, verticalInput, 0);
-
-        ////////////////////////////
        
 
         if(currentFuel <= 0)
@@ -274,7 +275,6 @@ public class Player : MonoBehaviour
             _thrustActive = true;
             _compFillActive = false;
         }
-        ////////////////////////////////
 
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && _thrustActive == true)
@@ -286,18 +286,6 @@ public class Player : MonoBehaviour
         {
             _sprintActive = false;
         }
-
-
-        /*
-         * If the player still has fuel, then sprint can be activated.
-         * 
-         * If the player uses all fuel they must wait for the fuel bar to completely refill before they can
-         * sprint again.
-         * 
-         * 
-         */
-
-
 
         if (_sprintActive == true)
         {
@@ -338,7 +326,9 @@ public class Player : MonoBehaviour
 
             return;
         }
-        
+
+        _camShake.ActiveAnim();
+
         _lives--;
         Debug.Log("Current Lives: " + _lives);
         _uiManager.UpdateLives(_lives);
@@ -413,7 +403,7 @@ public class Player : MonoBehaviour
 
     public void AddScore(int points)
     {
-        _score = _score + points;
+        _score += points;
         _uiManager.AddScore(_score);
         Debug.Log("Current Score: " + _score);
     }

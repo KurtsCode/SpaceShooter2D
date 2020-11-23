@@ -16,13 +16,7 @@ public class HomingLaser : MonoBehaviour
 
     private Vector3 _dir;
 
-    private Quaternion originalRotation;
-
-    private float rotationSpeed = 360f;
-
-    public float turn;
-
-    private bool _homingActive = false;
+    private float _rotationSpeed = 360f;
 
 
     // Start is called before the first frame update
@@ -30,8 +24,6 @@ public class HomingLaser : MonoBehaviour
     {
 
         _laserRigidbody = GetComponent<Rigidbody2D>();
-
-        originalRotation = transform.rotation;
 
         _laserTarget = GetClosestEnemy();
 
@@ -48,13 +40,13 @@ public class HomingLaser : MonoBehaviour
 
         if (_targetCollider != null)
         {
-
             Debug.Log("Homing Active");
+
             _dir = (_laserTargetPos.position - transform.position).normalized;
 
             float angle = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
 
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_dir), Time.deltaTime * rotationSpeed);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_dir), Time.deltaTime * _rotationSpeed);
 
             transform.eulerAngles = new Vector3(0, 0, transform.eulerAngles.z);
 
@@ -75,9 +67,11 @@ public class HomingLaser : MonoBehaviour
 
             Debug.Log("MOVE UP STARTED 1");
 
-            //_laserRigidbody.velocity = new Vector3(0, 20, 0);
-
             _laserRigidbody.AddForce(transform.up * 0.45f, ForceMode2D.Impulse);
+            
+            /// Alternative movement methods.///
+
+            //_laserRigidbody.velocity = new Vector3(0, 20, 0);
 
             //transform.Translate(Vector3.up * _speed * Time.deltaTime);
 
@@ -119,17 +113,17 @@ public class HomingLaser : MonoBehaviour
         GameObject[] _enemies = GameObject.FindGameObjectsWithTag("Enemy");
         GameObject _player = GameObject.FindGameObjectWithTag("Player");
 
-        GameObject bestTarget = null;
+        GameObject _bestTarget = null;
 
         if (_enemies == null)
         {
             Debug.Log("No viable targets");
-            return bestTarget;
+            return _bestTarget;
         }
 
         if (_player == null)
         {
-            return bestTarget;
+            return _bestTarget;
         }
 
         float _closestDistanceSqr = Mathf.Infinity;
@@ -145,7 +139,7 @@ public class HomingLaser : MonoBehaviour
                 if (dSqrToTarget < _closestDistanceSqr)
                 {
                     _closestDistanceSqr = dSqrToTarget;
-                    bestTarget = potentialTarget;
+                    _bestTarget = potentialTarget;
                     Debug.Log("New closest updated");
                 }
             }
@@ -155,7 +149,7 @@ public class HomingLaser : MonoBehaviour
                 continue;
             }
         }
-        return bestTarget;
+        return _bestTarget;
     }
 }
 

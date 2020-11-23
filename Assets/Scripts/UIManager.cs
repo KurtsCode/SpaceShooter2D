@@ -32,7 +32,7 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         restartActive = false;
-        //_liveSprites[CurrentPlayerLives = 3];
+        
         _ammoText.text = "Ammo: " + 15;
         _scoreText.text = "Score: " + 0;
         _gameOverText.gameObject.SetActive(false);

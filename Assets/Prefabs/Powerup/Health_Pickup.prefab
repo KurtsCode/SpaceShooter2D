@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 176432899026004963}
   - component: {fileID: 9064069887085412552}
   m_Layer: 0
-  m_Name: Health_pickup_RW
+  m_Name: Health_Pickup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -144,5 +144,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 3
-  powerupID: 4
+  _powerupID: 4
   _clip: {fileID: 8300000, guid: 5ee343246919d2b4bba63ae629e95494, type: 3}
