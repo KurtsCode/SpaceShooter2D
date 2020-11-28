@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HomingLaser : MonoBehaviour
+public class RevisedHoming : MonoBehaviour
 {
 
     [SerializeField]
@@ -25,12 +25,6 @@ public class HomingLaser : MonoBehaviour
 
     GameObject _player;
 
-
-    /* Boolean that affects the tracking behavior of the homing shots.
-     * ENABLED: The shots will change their trajectory mid flight to a new valid target if one is detected.
-     * DISABLED: The shots will choose an inital target and will only travel towards that location. 
-     *           If the target was destroyed before reaching the shot reaches it the shot will continue flying along its current trajectory.
-    */
     private bool _strictTracking;
 
     // Start is called before the first frame update
@@ -41,7 +35,7 @@ public class HomingLaser : MonoBehaviour
         _strictTracking = _player.GetComponent<Player>().strictTracking;
 
         _laserRigidbody = GetComponent<Rigidbody2D>();
-
+       
         if (_laserTarget != null)
         {
             _laserTargetPos = _laserTarget.transform;
@@ -53,16 +47,11 @@ public class HomingLaser : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
 
-        if (_strictTracking == true)
-        {
-            _laserTarget = _player.GetComponent<Player>()._bestTarget;
-        }
+        if(_laserTarget != null){
 
-        if (_laserTarget != null)
-        {
-
-            if (_laserTarget.GetComponent<Enemy>().exploded != true)
+            if(_laserTarget.GetComponent<Enemy>().exploded != true)
             {
                 _laserTargetPos = _laserTarget.transform;
 
@@ -79,14 +68,14 @@ public class HomingLaser : MonoBehaviour
                 _laserRigidbody.velocity = new Vector3(_dir.x * 20, _dir.y * 20, 0);
             }
         }
-
-        if (_laserTarget == null)
+        
+        if(_laserTarget == null)
         {
             Debug.Log("no target, laser");
             _laserRigidbody.AddForce(transform.up * 0.45f, ForceMode2D.Impulse);
         }
 
-        if (_laserTarget.GetComponent<Enemy>().exploded == true)
+        if(_laserTarget.GetComponent<Enemy>().exploded == true)
         {
             if (_strictTracking == true)
             {
@@ -95,7 +84,7 @@ public class HomingLaser : MonoBehaviour
 
         }
 
-        _laserRigidbody.velocity = new Vector3(_dir.x * 20, _dir.y * 20, 0);
+        _laserRigidbody.AddForce(transform.up * 0.45f, ForceMode2D.Impulse);
 
         BoundCheck();
 

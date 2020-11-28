@@ -21,6 +21,7 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private float _fireRate = 3.0f;
 
+    public bool exploded = false; 
 
     private Player _player;
 
@@ -119,6 +120,8 @@ public class Enemy : MonoBehaviour
             _audioSource.Play();
             _laserActive = false;
 
+            exploded = true;
+
             Destroy(GetComponent<Collider2D>());
             Destroy(this.gameObject, 2.4f);
         }
@@ -138,6 +141,8 @@ public class Enemy : MonoBehaviour
             _speed = 0;
             _audioSource.Play();
             _laserActive = false;
+
+            exploded = true;
 
             Destroy(GetComponent<Collider2D>());
             Destroy(this.gameObject,2.4f);    

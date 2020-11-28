@@ -14,13 +14,15 @@ public class Asteroid : MonoBehaviour
 
     private Spawn_Manager _spawnManager;
 
+    private ShakeWithAnim _camShake;
+
 
     // Start is called before the first frame update
     void Start()
     {
 
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<Spawn_Manager>();
-
+        _camShake = GameObject.Find("Main Camera").GetComponent<ShakeWithAnim>();
 
         if (_spawnManager == null)
         {
@@ -43,9 +45,12 @@ public class Asteroid : MonoBehaviour
 
         if (other.tag == "Laser")
         {
+            _camShake.ActiveAnim();
 
             Instantiate(_explosionAnim, transform.position, Quaternion.identity);
             Destroy(other.gameObject);
+
+            
 
             _spawnManager.StartSpawning();
 

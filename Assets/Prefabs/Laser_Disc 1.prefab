@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 5696530448339770581}
   - component: {fileID: 4459307261820396186}
   - component: {fileID: 4291361240151736927}
-  - component: {fileID: 1907010889585142442}
+  - component: {fileID: 5189213162342995101}
   m_Layer: 0
-  m_Name: Laser_Disc
+  m_Name: Laser_Disc 1
   m_TagString: Laser
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -121,7 +121,7 @@ CircleCollider2D:
   m_Offset: {x: -0.48688817, y: 0.19475129}
   serializedVersion: 2
   m_Radius: 13.606818
---- !u!114 &1907010889585142442
+--- !u!114 &5189213162342995101
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,9 +130,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 8797649070727179274}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f56fadd234a34ea4ba4a7a7903fd6f75, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c85dffb4c5687c4b902f8f3dc67a0ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyContainer: {fileID: 0}
+  _laserTarget: {fileID: 0}
   _targetCollider: {fileID: 0}
   _speed: 20

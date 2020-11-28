@@ -26,7 +26,11 @@ public class UIManager : MonoBehaviour
 
     private GameManager _gameManager;
 
-    private bool restartActive; 
+    private bool restartActive;
+
+    private bool outOfAmmo;
+
+    private int ammo;
 
     // Start is called before the first frame update
     void Start()
@@ -34,7 +38,7 @@ public class UIManager : MonoBehaviour
         restartActive = false;
         
         _ammoText.text = "Ammo: " + 15;
-        _scoreText.text = "Score: " + 0;
+        _scoreText.text = "SCORE: " + 0;
         _gameOverText.gameObject.SetActive(false);
         _gameManager = GameObject.Find("Game_Manager").GetComponent<GameManager>();
     }
@@ -47,12 +51,27 @@ public class UIManager : MonoBehaviour
 
     public void AddScore(int playerScore)
     {
-        _scoreText.text = "Score: " + playerScore.ToString();
+        _scoreText.text = "SCORE: " + playerScore.ToString();
     }
 
     public void UpdateAmmo(int ammoCount)
     {
         _ammoText.text = "Ammo: " + ammoCount.ToString();
+
+        ammo = ammoCount;
+
+        if (ammoCount == 0)
+        {
+            outOfAmmo = true;
+            _ammoText.color = Color.red;
+            StartCoroutine(AmmoFlickerRoutine());
+        }
+        else
+        {
+            outOfAmmo = false;
+            _ammoText.color = Color.white;
+            StopCoroutine(AmmoFlickerRoutine());
+        }
     }
 
     public void UpdateLives(int currentLives)
@@ -99,5 +118,25 @@ public class UIManager : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             */
         }   
+    }
+
+    IEnumerator AmmoFlickerRoutine()
+    {
+
+        while (outOfAmmo)
+        {
+            _ammoText.text = "Ammo: " + ammo.ToString();
+            yield return new WaitForSeconds(0.25f);
+            _ammoText.text = "";
+            yield return new WaitForSeconds(0.25f);
+
+
+            /* Alternative method involving activating and deactivating the game over message to casue the flicker effect.
+            _gameOverText.gameObject.SetActive(true);
+            yield return new WaitForSeconds(0.5f);
+            _gameOverText.gameObject.SetActive(false);
+            yield return new WaitForSeconds(0.5f);
+            */
+        }
     }
 }

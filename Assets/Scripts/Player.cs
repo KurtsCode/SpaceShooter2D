@@ -8,12 +8,18 @@ using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField]
+    private float powerUpActiveTime = 5f;
+    private float powerUpDuration = 5f;
  
     // Player movement values
     [SerializeField]
-    private float _speed = 3.5f;
-    private float _boostSpeed = 15.0f;
-    private float _speedMultiplier = 2;
+    private float _speed = 5.0f;
+    private float _boostSpeed = 1f;
+    private float _thrusterSpeed = 3.0f;
+    
+    [SerializeField]
+    private float _totalSpeed;
 
     private bool _sprintActive;
 
@@ -27,6 +33,7 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     public GameObject _tripleShotPrefab;
+
 
 
     // Player attack values
@@ -74,17 +81,21 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private bool _tripleShotActive = false;
+    private bool crActive_TS = false;
 
     [SerializeField]
     private bool _homeShotActive = false;
+    private bool crActive_HS = false;
 
     [SerializeField]
     private bool _speedBoostActive = false;
+    private bool crActive_SB = false;
 
     [SerializeField]
     private bool _shieldActive = false;
+    private bool crActive_SH = false;
 
-   
+
     // Shield powerup values.
 
     [SerializeField]
@@ -96,6 +107,9 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private int _shieldHealth;
+
+    // Boolean that controls whether the shield lasts permanently or for a limited time.
+    private bool _shieldLimit = false;
 
 
     // Thruster values
@@ -111,8 +125,33 @@ public class Player : MonoBehaviour
     private bool _thrustActive = true;
     private bool _compFillActive = false;
 
+    [SerializeField]
+    private GameObject _thrusterSprite;
+
+    [SerializeField]
+    private GameObject _thrusterSpriteBig;
+
+
     private ShakeWithAnim _camShake;
 
+    // Closest Enemy detection
+    [SerializeField]
+    private Transform _enemyContainer;
+
+    public Transform _bestTarget;
+
+    private Transform _lastBestTarget;
+
+    private float dSqrToTarget;
+
+    private Vector3 directionToTarget;
+
+    /* Boolean that affects the tracking behavior of the homing shots.
+    *  ENABLED: The shots will change their trajectory mid flight to a new valid target if one is detected.
+    *  DISABLED: The shots will choose an inital target and will only travel towards that location. 
+    *            If the target was destroyed before reaching the shot reaches it the shot will continue flying along its current trajectory.
+    */
+    public bool strictTracking = false;
 
     // Start is called before the first frame update
     void Start()
@@ -124,7 +163,7 @@ public class Player : MonoBehaviour
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<Spawn_Manager>();
         _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
         _camShake = GameObject.Find("Main Camera").GetComponent<ShakeWithAnim>();
-
+        
         // Access attached audio source component.
         _audioSource = GetComponent<AudioSource>();
 
@@ -143,19 +182,25 @@ public class Player : MonoBehaviour
         thrusterMeter.maxValue = maxFuel;
         thrusterMeter.value = maxFuel;
 
+        //StartCoroutine("GetClosestEnemyCR");
+
+        _bestTarget = null;
+        _lastBestTarget = null; 
+
+
         if (_spawnManager == null)
         {
-            Debug.LogError("The Spawn Manager is NULL.");
+           // Debug.LogError("The Spawn Manager is NULL.");
         }
 
         if (_uiManager == null)
         {
-            Debug.LogError("The UI Manager is NULL.");
+           // Debug.LogError("The UI Manager is NULL.");
         }
 
         if (_audioSource == null)
         {
-            Debug.LogError("AudioSource on the player is NULL.");
+           // Debug.LogError("AudioSource on the player is NULL.");
         }
         else
         {
@@ -167,19 +212,18 @@ public class Player : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
+    {  
 
-
+        GetClosestEnemy();
         ActivateThruster();
         CalculateMovement();
-
+      
 
         if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire && _hasAmmo == true)
         {
             FireLaser();
         }
    
-
     }
 
     void FireLaser()
@@ -193,7 +237,7 @@ public class Player : MonoBehaviour
         }
         else if (_homeShotActive == true)
         {
-            Instantiate(_homingLaserPrefab, transform.position, Quaternion.identity);
+            Instantiate(_homingLaserPrefab, transform.position + new Vector3(0, 1.05f, 0), Quaternion.identity);
         }
         else 
         {
@@ -219,6 +263,10 @@ public class Player : MonoBehaviour
         {
             burnFuel = StartCoroutine(UseFuel(0.01f, KeyCode.LeftShift));
 
+            
+            _thrusterSprite.SetActive(false);
+            _thrusterSpriteBig.SetActive(true);
+
             if (regen != null)
             {
                 StopCoroutine(regen);
@@ -231,12 +279,19 @@ public class Player : MonoBehaviour
         {
             
             regen = StartCoroutine(RegenFuel());
-             
+            
+
+            _thrusterSprite.SetActive(true);
+            _thrusterSpriteBig.SetActive(false);
+
         }
         else if (Input.GetKeyUp(KeyCode.LeftShift) && _thrustActive == false)
         {
-            Debug.Log("Thruster Comp Fill started");
             
+
+            _thrusterSprite.SetActive(true);
+            _thrusterSpriteBig.SetActive(false);
+
             if (_compFillActive == false)
             {
                 compFill = StartCoroutine(CompRefillFuel());
@@ -265,13 +320,13 @@ public class Player : MonoBehaviour
 
         if(currentFuel <= 0)
         {
-            Debug.Log("Thrust deactivated");
+            //Debug.Log("Thrust deactivated");
             _thrustActive = false;
         }
 
         if(currentFuel >= maxFuel)
         {
-            Debug.Log("Thrust reactivated");
+            //Debug.Log("Thrust reactivated");
             _thrustActive = true;
             _compFillActive = false;
         }
@@ -289,16 +344,26 @@ public class Player : MonoBehaviour
 
         if (_sprintActive == true)
         {
-            transform.Translate(direction * _boostSpeed * Time.deltaTime);
+            _totalSpeed = _speed * _thrusterSpeed * _boostSpeed;
+
+            if(_totalSpeed > 30f)
+            {
+                _totalSpeed = 30f;
+            }
+
+            transform.Translate(direction * _totalSpeed * Time.deltaTime);          
         }
         else
         {
-            transform.Translate(direction * _speed * Time.deltaTime);
+            transform.Translate(direction * (_speed * _boostSpeed) * Time.deltaTime);
+            _totalSpeed = _speed * _boostSpeed;
         }
         
-
+        
+        // Sets vertical limit to how high on the screen the player character can move. If the playe tries to move higher than the limit their vertical movement is stopped.
         transform.position = new Vector3(transform.position.x, Mathf.Clamp(transform.position.y, -3.8f, 0), 0); 
 
+        // Sets horizontal limits to the player character. If they exceed these bounds, send the player to the opposite side of the screen.
         if (transform.position.x > 11.3f)
         {
             transform.position = new Vector3(-11.3f, transform.position.y, 0);
@@ -330,7 +395,7 @@ public class Player : MonoBehaviour
         _camShake.ActiveAnim();
 
         _lives--;
-        Debug.Log("Current Lives: " + _lives);
+        //Debug.Log("Current Lives: " + _lives);
         _uiManager.UpdateLives(_lives);
 
         ActiveDamage();
@@ -347,18 +412,18 @@ public class Player : MonoBehaviour
     {
         int activeID = Random.Range(0, 2);
 
-        Debug.Log("Active ID " + activeID);
+        //Debug.Log("Active ID " + activeID);
 
         if (activeID == 0)
         {
             if (_leftEngine.activeSelf == false)
             {
-                Debug.Log("Active left engine");
+                //Debug.Log("Active left engine");
                 _leftEngine.SetActive(true);
             }
             else
             {
-                Debug.Log("Left engine already on, Active right engine");
+                //Debug.Log("Left engine already on, Active right engine");
                 _rightEngine.SetActive(true);
             }
 
@@ -368,12 +433,12 @@ public class Player : MonoBehaviour
         {
             if (_rightEngine.activeSelf == false)
             {
-                Debug.Log("Active right engine");
+                //Debug.Log("Active right engine");
                 _rightEngine.SetActive(true);
             }
             else
             {
-                Debug.Log("Right engine already on, Active left engine");
+                //Debug.Log("Right engine already on, Active left engine");
                 _leftEngine.SetActive(true);
             }
 
@@ -405,7 +470,7 @@ public class Player : MonoBehaviour
     {
         _score += points;
         _uiManager.AddScore(_score);
-        Debug.Log("Current Score: " + _score);
+        //Debug.Log("Current Score: " + _score);
     }
 
     public void DecreaseAmmo()
@@ -418,7 +483,7 @@ public class Player : MonoBehaviour
             _hasAmmo = false;
         }
 
-        Debug.Log("Current Score: " + _ammo);
+        //Debug.Log("Current Score: " + _ammo);
     }
 
     public void RefillAmmo()
@@ -449,14 +514,102 @@ public class Player : MonoBehaviour
   
     }
 
+
+    void GetClosestEnemy()
+    {
+
+        float _closestDistanceSqr = Mathf.Infinity;
+        Vector3 currentPosition = transform.position;
+
+        foreach (Transform potentialTarget in _enemyContainer)
+        {
+            if (potentialTarget.GetComponent<Enemy>().exploded != true)
+            {
+                directionToTarget = potentialTarget.position - currentPosition;
+                dSqrToTarget = directionToTarget.sqrMagnitude;
+
+                if (dSqrToTarget < _closestDistanceSqr)
+                {
+                    _closestDistanceSqr = dSqrToTarget;
+                    _bestTarget = potentialTarget;
+                    dSqrToTarget = Mathf.Infinity;
+                    Debug.Log("New closest updated" + _bestTarget);
+                    Debug.Log("New distance" + dSqrToTarget);
+                }
+
+                if (potentialTarget == null)
+                {
+                    Debug.LogError("Potential Target is null");
+                }
+            }
+            
+        }
+
+        
+        //Debug.Log("Number of iterations: " + i);
+        
+        if(_bestTarget != null)
+        {
+            if (_bestTarget.GetComponent<Enemy>().exploded == true)
+            {
+                //Debug.Log("Return an existing object");
+                _bestTarget = null;
+                _closestDistanceSqr = Mathf.Infinity;
+                dSqrToTarget = Mathf.Infinity;
+                directionToTarget = transform.position;
+
+                Debug.Log("no target, enemy destroyed by laser");
+                Debug.Log("Last Best =" + _bestTarget);
+
+            }
+        }
+        
+        if(_bestTarget == null)
+        {
+            Debug.Log("no target, Player");
+        } 
+
+    }
+
+
+
     public void TripleShotActive()
     {
+        powerUpActiveTime = powerUpDuration + Time.deltaTime;
+        
+        if (_homeShotActive == true)
+        {
+            _homeShotActive = false;
+        }
+
+        if(crActive_HS == true)
+        {
+            StopCoroutine(HomingShotPowerDownRoutine());
+            crActive_HS = false;
+
+        }
+
         _tripleShotActive = true;
         StartCoroutine(TripleShotPowerDownRoutine());
     }
 
     public void HomingShotActive()
     {
+
+        powerUpActiveTime = powerUpDuration + Time.deltaTime;
+        
+        if (_tripleShotActive == true)
+        {
+            _tripleShotActive = false;
+        }
+
+        if (crActive_TS == true)
+        {
+            StopCoroutine(HomingShotPowerDownRoutine());
+            crActive_TS = false;
+
+        }
+
         _homeShotActive = true;
         StartCoroutine(HomingShotPowerDownRoutine());
     }
@@ -464,7 +617,7 @@ public class Player : MonoBehaviour
     public void SpeedBoostActive()
     {
         _speedBoostActive = true;
-        _speed *= _speedMultiplier;
+        _boostSpeed = 3.0f;
         StartCoroutine(SpeedBoostPowerDownRoutine());
     }
 
@@ -474,26 +627,53 @@ public class Player : MonoBehaviour
         _shieldHealth = 3;
         ShieldColor(_shieldHealth);
         playerShield.SetActive(true);
-        //StartCoroutine(ShieldPowerDownRoutine());
+
+        if (_shieldLimit)
+        {
+            StartCoroutine(ShieldPowerDownRoutine());
+        }
+        
     }
 
     IEnumerator TripleShotPowerDownRoutine()
     {
-        yield return new WaitForSeconds(5);
+        crActive_TS = true;
+
+        while (powerUpActiveTime > 0)
+        {
+            powerUpActiveTime -= Time.deltaTime;
+            //Debug.Log("Power Up Time: " + powerUpTime);
+            //Debug.Log("Power Up Delta Time: " + Time.deltaTime);
+            yield return null;
+        }
+
         _tripleShotActive = false;
+        crActive_TS = false;
     }
 
     IEnumerator HomingShotPowerDownRoutine()
     {
+        crActive_HS = true;
+
+
+        while (powerUpActiveTime > 0)
+        {
+            powerUpActiveTime -= Time.deltaTime;
+            //Debug.Log("Power Up Time: " + powerUpTime);
+            //Debug.Log("Power Up Delta Time: " + Time.deltaTime);
+            yield return null;
+        }
+
         yield return new WaitForSeconds(5);
         _homeShotActive = false;
+        crActive_HS = false;
     }
 
     IEnumerator SpeedBoostPowerDownRoutine()
     {
         yield return new WaitForSeconds(5);
         _speedBoostActive = false;
-        _speed /= _speedMultiplier;
+        _boostSpeed = 1f;
     }
 
     IEnumerator ShieldPowerDownRoutine()
@@ -505,10 +685,10 @@ public class Player : MonoBehaviour
 
     IEnumerator UseFuel(float delay, KeyCode code)
     {
-        Debug.Log("UseFuel Started");
+       // Debug.Log("UseFuel Started");
         while (Input.GetKey(code) && _thrustActive)
         {
-            Debug.Log("Burning fuel");
+            //Debug.Log("Burning fuel");
             currentFuel -= 1;
             thrusterMeter.value = currentFuel;
             yield return new WaitForSeconds(delay);
@@ -519,12 +699,12 @@ public class Player : MonoBehaviour
 
     IEnumerator RegenFuel()
     {
-        Debug.Log("Regen active");
+       // Debug.Log("Regen active");
         yield return new WaitForSeconds(0.5f);
 
         while (currentFuel < maxFuel && _thrustActive == true)
         {
-            Debug.Log("Regenning");
+            //Debug.Log("Regenning");
             yield return new WaitForSeconds(0.02f);
             currentFuel += 1;
             thrusterMeter.value = currentFuel;
@@ -542,12 +722,12 @@ public class Player : MonoBehaviour
     IEnumerator CompRefillFuel()
     {
         _compFillActive = true;
-        Debug.Log("CompFill active");
+        //Debug.Log("CompFill active");
         yield return new WaitForSeconds(2f);
 
         while (currentFuel < maxFuel && _thrustActive == false)
         {
-            Debug.Log("Completely Refilling");
+            //Debug.Log("Completely Refilling");
             yield return new WaitForSeconds(0.002f);
             currentFuel += 1;
             thrusterMeter.value = currentFuel;
