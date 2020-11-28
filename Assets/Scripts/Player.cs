@@ -11,6 +11,8 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float powerUpActiveTime = 5f;
     private float powerUpDuration = 5f;
+
+    private float speedBoostActiveTime = 5f;
  
     // Player movement values
     [SerializeField]
@@ -48,6 +50,9 @@ public class Player : MonoBehaviour
     private bool _hasAmmo;
 
     private int _maxAmmo = 15;
+
+    [SerializeField]
+    private GameObject outOfAmmoSprite;
 
     [SerializeField]
     private int _score;
@@ -101,6 +106,15 @@ public class Player : MonoBehaviour
     [SerializeField]
     private GameObject playerShield;
 
+    [SerializeField]
+    private Slider powerUpMeter;
+
+    [SerializeField]
+    private Slider speedBoostMeter;
+
+    [SerializeField]
+    private Image powerMeterFill;
+
     private SpriteRenderer _shieldColor;
 
     private Color _shieldColorBase;
@@ -130,6 +144,9 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private GameObject _thrusterSpriteBig;
+
+    [SerializeField]
+    private GameObject _thrusterSpriteSmall;
 
 
     private ShakeWithAnim _camShake;
@@ -170,19 +187,30 @@ public class Player : MonoBehaviour
         // Access the Sprite Render fo the shield sprite that is chileded to the player.
         _shieldColor = playerShield.GetComponent<SpriteRenderer>();
 
-        _shieldColorBase = _shieldColor.color;
+        //_shieldColorBase = _shieldColor.color;
+        _shieldColorBase = new Color(1f,1f,1f,.5f);
 
 
         // Player control checks and values.
         _hasAmmo = true;
         _sprintActive = false;
 
-        // Establish the starting balues for the thruster meter.
+        // Establish the starting values for the thruster meter.
         currentFuel = maxFuel;
         thrusterMeter.maxValue = maxFuel;
         thrusterMeter.value = maxFuel;
 
         //StartCoroutine("GetClosestEnemyCR");
+
+        // Establish the starting values for the powerup meter.
+        powerUpMeter.maxValue = powerUpDuration;
+        powerUpMeter.value = 0;
+        powerUpMeter.gameObject.SetActive(false);
+
+        //Establish the starting values for the speedboost meter.
+        speedBoostMeter.maxValue = powerUpDuration;
+        speedBoostMeter.value = 0;
+        speedBoostMeter.gameObject.SetActive(false);
 
         _bestTarget = null;
         _lastBestTarget = null; 
@@ -223,12 +251,15 @@ public class Player : MonoBehaviour
         {
             FireLaser();
         }
+        else if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire && _hasAmmo == false)
+        {
+            StartCoroutine(EmptyAmmoIndicator());
+        }
    
     }
 
     void FireLaser()
     {
-
         _canFire = Time.time + _fireRate;
   
         if (_tripleShotActive == true)
@@ -261,6 +292,8 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && _thrustActive == true)
         {
+            // This block activates if the player activates their thrusters while still having thruster fuel.
+
             burnFuel = StartCoroutine(UseFuel(0.01f, KeyCode.LeftShift));
 
             
@@ -270,40 +303,18 @@ public class Player : MonoBehaviour
             if (regen != null)
             {
                 StopCoroutine(regen);
-            }
-
-            
+            }   
 
         }
         else if (Input.GetKeyUp(KeyCode.LeftShift) && _thrustActive == true)
         {
-            
+            // This block activates if the player deactivates their thrusters while still having fuel left.
             regen = StartCoroutine(RegenFuel());
             
 
             _thrusterSprite.SetActive(true);
             _thrusterSpriteBig.SetActive(false);
 
-        }
-        else if (Input.GetKeyUp(KeyCode.LeftShift) && _thrustActive == false)
-        {
-            
-
-            _thrusterSprite.SetActive(true);
-            _thrusterSpriteBig.SetActive(false);
-
-            if (_compFillActive == false)
-            {
-                compFill = StartCoroutine(CompRefillFuel());
-            }
-            
-
-            if (burnFuel != null)
-            {
-                StopCoroutine(burnFuel);
-            }
-
-            
         }
 
     }
@@ -317,14 +328,29 @@ public class Player : MonoBehaviour
        
         Vector3 direction = new Vector3(horizontalInput, verticalInput, 0);
        
-
+        // If the player burns all of their fuel, start the coroutine to completely refill their fuel after a delay. Additionally it will activate the smaller thruster sprite until the fuel refills.
         if(currentFuel <= 0)
         {
             //Debug.Log("Thrust deactivated");
             _thrustActive = false;
+            _thrusterSprite.SetActive(false);
+            _thrusterSpriteSmall.SetActive(true);
+            _thrusterSpriteBig.SetActive(false);
+
+            if (_compFillActive == false)
+            {
+                compFill = StartCoroutine(CompRefillFuel());
+            }
+
+
+            if (burnFuel != null)
+            {
+                StopCoroutine(burnFuel);
+            }
+
         }
 
-        if(currentFuel >= maxFuel)
+        if (currentFuel >= maxFuel)
         {
             //Debug.Log("Thrust reactivated");
             _thrustActive = true;
@@ -451,12 +477,13 @@ public class Player : MonoBehaviour
         
         if(_shieldLevel == 1)
         {
-            _shieldColor.color = new Color(1, 0, 0, 1);
+            _shieldColor.color = new Color(1f, 0f, 0f, 0.5f);
         }
 
         if(_shieldLevel == 2)
         {
-            _shieldColor.color = Color.yellow;
+            //_shieldColor.color = Color.yellow;
+            _shieldColor.color = new Color(1, 0.92f, 0.016f, 0.5f);
         }
 
         if(_shieldLevel >= 3)
@@ -492,6 +519,8 @@ public class Player : MonoBehaviour
         _uiManager.UpdateAmmo(_ammo);
         _hasAmmo = true;
     }
+
+
 
     public void RefillHealth()
     {
@@ -575,6 +604,9 @@ public class Player : MonoBehaviour
 
     public void TripleShotActive()
     {
+        powerMeterFill.color = Color.green;
+        powerUpMeter.gameObject.SetActive(true);
+
         powerUpActiveTime = powerUpDuration + Time.deltaTime;
         
         if (_homeShotActive == true)
@@ -595,6 +627,8 @@ public class Player : MonoBehaviour
 
     public void HomingShotActive()
     {
+        powerMeterFill.color = Color.blue;
+        powerUpMeter.gameObject.SetActive(true);
 
         powerUpActiveTime = powerUpDuration + Time.deltaTime;
         
@@ -616,6 +650,8 @@ public class Player : MonoBehaviour
 
     public void SpeedBoostActive()
     {
+        speedBoostActiveTime = powerUpDuration + Time.deltaTime;
+        speedBoostMeter.gameObject.SetActive(true);
         _speedBoostActive = true;
         _boostSpeed = 3.0f;
         StartCoroutine(SpeedBoostPowerDownRoutine());
@@ -642,11 +678,14 @@ public class Player : MonoBehaviour
         while (powerUpActiveTime > 0)
         {
             powerUpActiveTime -= Time.deltaTime;
+
+            powerUpMeter.value = powerUpActiveTime;
             //Debug.Log("Power Up Time: " + powerUpTime);
             //Debug.Log("Power Up Delta Time: " + Time.deltaTime);
             yield return null;
         }
 
+        powerUpMeter.gameObject.SetActive(false);
         _tripleShotActive = false;
         crActive_TS = false;
     }
@@ -655,23 +694,33 @@ public class Player : MonoBehaviour
     {
         crActive_HS = true;
 
-
         while (powerUpActiveTime > 0)
         {
             powerUpActiveTime -= Time.deltaTime;
+
+            powerUpMeter.value = powerUpActiveTime;
             //Debug.Log("Power Up Time: " + powerUpTime);
             //Debug.Log("Power Up Delta Time: " + Time.deltaTime);
             yield return null;
         }
 
-        yield return new WaitForSeconds(5);
+        powerUpMeter.gameObject.SetActive(false);
         _homeShotActive = false;
         crActive_HS = false;
     }
 
     IEnumerator SpeedBoostPowerDownRoutine()
     {
-        yield return new WaitForSeconds(5);
+        while(speedBoostActiveTime > 0)
+        {
+            speedBoostActiveTime -= Time.deltaTime;
+
+            speedBoostMeter.value = speedBoostActiveTime;
+
+            yield return null;
+        }
+
+        speedBoostMeter.gameObject.SetActive(false);
         _speedBoostActive = false;
         _boostSpeed = 1f;
     }
@@ -738,7 +787,17 @@ public class Player : MonoBehaviour
             currentFuel = maxFuel;
         }
 
+        _thrusterSprite.SetActive(true);
+        _thrusterSpriteSmall.SetActive(false);
+        
         // Deletes regen once the meter hits the max.
         compFill = null;
+    }
+
+    IEnumerator EmptyAmmoIndicator()
+    {
+        outOfAmmoSprite.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        outOfAmmoSprite.SetActive(false);
     }
 }
