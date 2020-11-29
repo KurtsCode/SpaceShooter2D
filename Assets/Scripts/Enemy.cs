@@ -7,7 +7,7 @@ public class Enemy : MonoBehaviour
 {
 
     [SerializeField]
-    private float _speed = 4.0f;
+    private float _speed;
 
     [SerializeField]
     private int _points = 10;
@@ -21,6 +21,9 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private float _fireRate = 3.0f;
 
+    [SerializeField]
+    private int movementType;
+
     public bool exploded = false; 
 
     private Player _player;
@@ -31,7 +34,13 @@ public class Enemy : MonoBehaviour
 
     private float _canFire;
 
-    private bool _laserActive; 
+    private bool _laserActive;
+
+    [SerializeField]
+    private float newPos;
+
+    [SerializeField]
+    private int angleCheck;
 
 
     // Start is called before the first frame update
@@ -39,7 +48,9 @@ public class Enemy : MonoBehaviour
     {
         float newPos = Random.Range(-8f, 8f);
 
-        transform.position = new Vector3(newPos, 7.0f, 0);
+        _speed = Random.Range(4.0f, 5.0f);
+
+        //transform.position = new Vector3(newPos, 7.0f, 0);
 
         _player = GameObject.Find("Player").GetComponent<Player>();
 
@@ -63,13 +74,27 @@ public class Enemy : MonoBehaviour
         {
             Debug.LogError("AudioSource on the player is NULL.");
         }
+
+
+
     }
 
     // Update is called once per frame
     void Update()
     {
-
-        CalculateMovement();
+        switch (movementType)
+        {
+            case 0:
+                CalcLineMovement();
+                break;
+            case 1:
+                CalcDiagonalMovement(0);
+                break;
+            case 2:
+                CalcDiagonalMovement(1);
+                break;
+        }
+        //CalculateMovement();
 
         if (Time.time > _canFire && _laserActive == true)
         {
@@ -88,7 +113,7 @@ public class Enemy : MonoBehaviour
         
     }
 
-    void CalculateMovement()
+    void CalcLineMovement()
     {
         transform.Translate(Vector3.down * _speed * Time.deltaTime);
 
@@ -99,6 +124,61 @@ public class Enemy : MonoBehaviour
             // Respawn at the top with a new random x position.
             transform.position = new Vector3(newPos, 7.0f, 0);
         }
+    }
+
+
+
+
+    void CalcDiagonalMovement(int angle)
+    {
+        angleCheck = angle;
+
+        if (angle == 0)
+        {
+            // Move diagonally from right to left.
+            transform.Translate(new Vector3(-0.75f, -1f, 0) * _speed * Time.deltaTime);
+        }
+        else if (angle == 1)
+        {
+            // Move diagonally from left to right.
+            transform.Translate(new Vector3(0.75f, -1f, 0) * _speed * Time.deltaTime);
+        }
+       
+
+        if (transform.position.y < -5.0f)
+        {
+
+            movementType = Random.Range(1, 3);
+
+            if (movementType == 1)
+            {
+                newPos = 8.0f;
+            }
+            else if (movementType == 2)
+            {
+                newPos = -8.0f;
+            }
+
+            // Respawn at the top with a new random x position.
+            transform.position = new Vector3(newPos, Random.Range(5.0f, 8.0f), 0);
+        }
+    }
+
+
+    void CalcCurveMovement()
+    {
+
+    }
+
+    void CalcSerpentMovement()
+    {
+
+    }
+
+
+    public void SetMovementType(int moveID)
+    {
+        movementType = moveID;
     }
 
     private void OnTriggerEnter2D(Collider2D other)

@@ -12,10 +12,15 @@ public class Spawn_Manager : MonoBehaviour
     [SerializeField]
     public GameObject[] powerups;
 
+    private Vector3 spawnPos;
+
     private int[] powerUpIds = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5};
+    private int[] enemyIds = { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 };
+
+    // Experimental array to also randomly decide the movement pattern of spawned items. Will not be used on first version of this game.
+    private int[] spawnPosIds = { 1, 1, 1, 1, 2, 2, 2, 2};
 
     private bool _stopSpawning = false;
-    private int selectedID;
 
     public List<GameObject> enemyList = new List<GameObject>();
     public List<Transform> enemyPosList = new List<Transform>();
@@ -37,14 +42,56 @@ public class Spawn_Manager : MonoBehaviour
 
         while (_stopSpawning == false) 
         {
-            Vector3 spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
 
-            GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
+            int randomEnemyType = enemyIds[Random.Range(0, enemyIds.Length)];
+            int randomSpawnType = spawnPosIds[Random.Range(0, spawnPosIds.Length)];
+            
 
-            newEnemy.transform.parent = _enemyContainer.transform;
+            if (randomSpawnType == 0)
+            {
+                // Spawn with the default pattern
+                spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
 
-            StoreEnemyTransform(newEnemy);
+                GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
 
+                Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+
+                enemyCtrl.SetMovementType(randomSpawnType);
+
+                newEnemy.transform.parent = _enemyContainer.transform;
+
+                StoreEnemyTransform(newEnemy);
+            }
+            else if (randomSpawnType == 1)
+            {
+                // Spawn diagonally from right to left.
+                spawnPos = new Vector3(8.0f, Random.Range(5.0f, 8.0f), 0);
+
+                GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
+
+                Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+
+                enemyCtrl.SetMovementType(randomSpawnType);
+
+                newEnemy.transform.parent = _enemyContainer.transform;
+
+                StoreEnemyTransform(newEnemy);
+            }
+            else if (randomSpawnType == 2)
+            {
+                // Spawn diagonally from left to right.
+                spawnPos = new Vector3(-8.0f, Random.Range(5.0f, 8.0f), 0);
+
+                GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
+
+                Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+
+                enemyCtrl.SetMovementType(randomSpawnType);
+
+                newEnemy.transform.parent = _enemyContainer.transform;
+
+                StoreEnemyTransform(newEnemy);
+            }
 
             yield return new WaitForSeconds(5.0f);
 
@@ -62,8 +109,6 @@ public class Spawn_Manager : MonoBehaviour
 
     IEnumerator SpawnPowerupRoutine()
     {
-        selectedID = powerUpIds[Random.Range(0, powerUpIds.Length)];
-
         Debug.Log("Spawning power-up");
 
         yield return new WaitForSeconds(3.0f);

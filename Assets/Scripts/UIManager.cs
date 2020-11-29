@@ -32,6 +32,8 @@ public class UIManager : MonoBehaviour
 
     private int ammo;
 
+    private int maxAmmo = 15;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -56,7 +58,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateAmmo(int ammoCount)
     {
-        _ammoText.text = "Ammo: " + ammoCount.ToString();
+        _ammoText.text = "Ammo: " + ammoCount.ToString() + " / " + maxAmmo.ToString();
 
         ammo = ammoCount;
 
@@ -125,7 +127,7 @@ public class UIManager : MonoBehaviour
 
         while (outOfAmmo)
         {
-            _ammoText.text = "Ammo: " + ammo.ToString();
+            _ammoText.text = "Ammo: " + ammo.ToString() + " / " + maxAmmo.ToString();
             yield return new WaitForSeconds(0.25f);
             _ammoText.text = "";
             yield return new WaitForSeconds(0.25f);

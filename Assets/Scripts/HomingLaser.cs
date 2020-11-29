@@ -86,17 +86,6 @@ public class HomingLaser : MonoBehaviour
             _laserRigidbody.AddForce(transform.up * 0.45f, ForceMode2D.Impulse);
         }
 
-        if (_laserTarget.GetComponent<Enemy>().exploded == true)
-        {
-            if (_strictTracking == true)
-            {
-                _laserTarget = _player.GetComponent<Player>()._bestTarget;
-            }
-
-        }
-
-        _laserRigidbody.velocity = new Vector3(_dir.x * 20, _dir.y * 20, 0);
-
         BoundCheck();
 
     }
