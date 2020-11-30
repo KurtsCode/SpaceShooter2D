@@ -18,7 +18,7 @@ public class Spawn_Manager : MonoBehaviour
     private int[] enemyIds = { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 };
 
     // Experimental array to also randomly decide the movement pattern of spawned items. Will not be used on first version of this game.
-    private int[] spawnPosIds = { 1, 1, 1, 1, 2, 2, 2, 2};
+    private int[] spawnPosIds = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2};
 
     private bool _stopSpawning = false;
 
