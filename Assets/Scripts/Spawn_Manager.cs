@@ -6,7 +6,7 @@ public class Spawn_Manager : MonoBehaviour
 {
 
     [SerializeField]
-    public GameObject _enemyPrefab;
+    public GameObject[] _enemyPrefab;
     [SerializeField]
     private GameObject _enemyContainer;
     [SerializeField]
@@ -14,11 +14,11 @@ public class Spawn_Manager : MonoBehaviour
 
     private Vector3 spawnPos;
 
-    private int[] powerUpIds = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5};
+    private int[] powerUpIds = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6};
     private int[] enemyIds = { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 };
 
     // Experimental array to also randomly decide the movement pattern of spawned items. Will not be used on first version of this game.
-    private int[] spawnPosIds = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2};
+    private int[] spawnPosIds = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
 
     private bool _stopSpawning = false;
 
@@ -45,52 +45,82 @@ public class Spawn_Manager : MonoBehaviour
 
             int randomEnemyType = enemyIds[Random.Range(0, enemyIds.Length)];
             int randomSpawnType = spawnPosIds[Random.Range(0, spawnPosIds.Length)];
-            
 
-            if (randomSpawnType == 0)
+
+            switch (randomSpawnType)
             {
-                // Spawn with the default pattern
-                spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
+                case 0:
+                    // Spawn a regular enemy that moves in a straight line.
+                    spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
 
-                GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
+                    GameObject newEnemy = Instantiate(_enemyPrefab[0], spawnPos, Quaternion.identity);
 
-                Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+                    Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
 
-                enemyCtrl.SetMovementType(randomSpawnType);
+                    enemyCtrl.SetMovementType(randomSpawnType);
 
-                newEnemy.transform.parent = _enemyContainer.transform;
+                    newEnemy.transform.parent = _enemyContainer.transform;
 
-                StoreEnemyTransform(newEnemy);
-            }
-            else if (randomSpawnType == 1)
-            {
-                // Spawn diagonally from right to left.
-                spawnPos = new Vector3(8.0f, Random.Range(5.0f, 8.0f), 0);
+                    StoreEnemyTransform(newEnemy);
+                    break;
+                case 1:
+                    // Spawn a regular enemy that moves in at an angle from right to left.
+                    spawnPos = new Vector3(8.0f, Random.Range(5.0f, 8.0f), 0);
 
-                GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
+                    newEnemy = Instantiate(_enemyPrefab[0], spawnPos, Quaternion.identity);
 
-                Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+                    enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
 
-                enemyCtrl.SetMovementType(randomSpawnType);
+                    enemyCtrl.SetMovementType(randomSpawnType);
 
-                newEnemy.transform.parent = _enemyContainer.transform;
+                    newEnemy.transform.parent = _enemyContainer.transform;
 
-                StoreEnemyTransform(newEnemy);
-            }
-            else if (randomSpawnType == 2)
-            {
-                // Spawn diagonally from left to right.
-                spawnPos = new Vector3(-8.0f, Random.Range(5.0f, 8.0f), 0);
+                    StoreEnemyTransform(newEnemy);
 
-                GameObject newEnemy = Instantiate(_enemyPrefab, spawnPos, Quaternion.identity);
+                    break;
+                case 2:
+                    // Spawn a regular enemy that moves in at an angle from left to right.
+                    spawnPos = new Vector3(-8.0f, Random.Range(5.0f, 8.0f), 0);
 
-                Enemy enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+                    newEnemy = Instantiate(_enemyPrefab[0], spawnPos, Quaternion.identity);
 
-                enemyCtrl.SetMovementType(randomSpawnType);
+                    enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
 
-                newEnemy.transform.parent = _enemyContainer.transform;
+                    enemyCtrl.SetMovementType(randomSpawnType);
 
-                StoreEnemyTransform(newEnemy);
+                    newEnemy.transform.parent = _enemyContainer.transform;
+
+                    StoreEnemyTransform(newEnemy);
+                    break;
+                case 3:
+                    // Spawn a regular enemy that moves in a serpentine motion.
+                    spawnPos = new Vector3(Random.Range(-5.0f, 5.0f), 7.0f, 0);
+
+                    newEnemy = Instantiate(_enemyPrefab[0], spawnPos, Quaternion.identity);
+
+                    enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+
+                    enemyCtrl.SetMovementType(randomSpawnType);
+
+                    newEnemy.transform.parent = _enemyContainer.transform;
+
+                    StoreEnemyTransform(newEnemy);
+                    break;
+                case 4:
+                    // Spawn an cluster enemy that moves in a straight line.
+                    spawnPos = new Vector3(Random.Range(-8.0f, 8.0f), 7.0f, 0);
+
+                    newEnemy = Instantiate(_enemyPrefab[1], spawnPos, Quaternion.identity);
+
+                    enemyCtrl = newEnemy.transform.GetComponent<Enemy>();
+
+                    enemyCtrl.SetMovementType(0);
+
+                    newEnemy.transform.parent = _enemyContainer.transform;
+
+                    StoreEnemyTransform(newEnemy);
+                    break;
+
             }
 
             yield return new WaitForSeconds(5.0f);
@@ -119,7 +149,7 @@ public class Spawn_Manager : MonoBehaviour
 
             //int randomPowerUp = Random.Range(0,6);
 
-            int randomPowerUp = powerUpIds[Random.Range(0, powerUpIds.Length)];
+            int randomPowerUp = powerUpIds[Random.Range(18, powerUpIds.Length)];
 
             Debug.Log("Power Up Spawned: " + randomPowerUp);
 

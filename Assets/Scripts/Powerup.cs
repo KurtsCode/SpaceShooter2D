@@ -45,7 +45,7 @@ public class Powerup : MonoBehaviour
                         break;
                     case 1:
                         player.SpeedBoostActive();
-                        Debug.Log("Collected Speed boost");
+                        Debug.Log("Collected Speed Boost");
                         break;
                     case 2:
                         player.ShieldActive();
@@ -62,6 +62,10 @@ public class Powerup : MonoBehaviour
                     case 5:
                         player.HomingShotActive();
                         Debug.Log("Collected Homing Shot");
+                        break;
+                    case 6:
+                        player.SpeedDownActive();
+                        Debug.Log("Collected Speed Down");
                         break;
                     default:
                         Debug.Log("Default Value");

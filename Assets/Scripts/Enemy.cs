@@ -36,6 +36,19 @@ public class Enemy : MonoBehaviour
 
     private bool _laserActive;
 
+    private bool sMoveActive;
+
+    private float curveMax = 1.25f;
+
+    private float curveMin = -1.25f;
+
+    private GameObject parentObj;
+
+    private bool parentDestroyed;
+
+    [SerializeField]
+    private bool isMinion;
+
     [SerializeField]
     private float newPos;
 
@@ -75,6 +88,10 @@ public class Enemy : MonoBehaviour
             Debug.LogError("AudioSource on the player is NULL.");
         }
 
+        if (isMinion == true)
+        {
+            parentObj = transform.parent.gameObject;
+        }
 
 
     }
@@ -82,18 +99,28 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        switch (movementType)
+        if (isMinion != true)
         {
-            case 0:
-                CalcLineMovement();
-                break;
-            case 1:
-                CalcDiagonalMovement(0);
-                break;
-            case 2:
-                CalcDiagonalMovement(1);
-                break;
+            switch (movementType)
+            {
+                case 0:
+                    CalcLineMovement();
+                    break;
+                case 1:
+                    CalcDiagonalMovement(0);
+                    break;
+                case 2:
+                    CalcDiagonalMovement(1);
+                    break;
+                case 3:
+                    CalcSerpentMovement();
+                    break;
+                case 4:
+                    CalcCurveMovement();
+                    break;
+            }
         }
+        
         //CalculateMovement();
 
         if (Time.time > _canFire && _laserActive == true)
@@ -109,6 +136,28 @@ public class Enemy : MonoBehaviour
                 lasers[i].AssignEnemyLaser();
             }
 
+        }
+
+        if (isMinion == true)
+        {
+            if (parentObj != null)
+            {
+                if (parentObj.GetComponent<Enemy>().exploded == true)
+                {
+                    transform.parent = null;
+                    parentObj = null;
+                }
+            }
+
+            if(parentObj == null)
+            {
+                Debug.Log("Parent Destroyed");
+            }
+
+            if (transform.parent == null)
+            {
+                CalcLineMovement();
+            }
         }
         
     }
@@ -165,12 +214,19 @@ public class Enemy : MonoBehaviour
     }
 
 
-    void CalcCurveMovement()
+    void CalcSerpentMovement()
     {
-
+        /*
+        if (sMoveActive == false)
+        {
+            StartCoroutine(SerpentineMovement());
+        } */
+        
+        
+        transform.Translate(new Vector3(Mathf.PingPong(Time.time * 2, curveMax - curveMin) + curveMin, -1f, 0) * _speed * Time.deltaTime);
     }
 
-    void CalcSerpentMovement()
+    void CalcCurveMovement()
     {
 
     }
@@ -227,6 +283,25 @@ public class Enemy : MonoBehaviour
             Destroy(GetComponent<Collider2D>());
             Destroy(this.gameObject,2.4f);    
         }   
+    }
+
+    IEnumerator SerpentineMovement()
+    {
+        sMoveActive = true;
+        while (true)
+        {
+            //transform.position = new Vector3(Mathf.Sin(Time.time) * 1.0f, 0, 0);
+            //transform.Translate(new Vector3(Mathf.Sin(Time.time) * 0.25f, -1f, 0) *_speed * Time.deltaTime);
+           
+
+            yield return null;
+        }
+
+        /*
+        transform.Translate(new Vector3(-0.5f, -1f, 0) * _speed * Time.deltaTime);
+        yield return new WaitForSeconds(1.0f);
+        transform.Translate(new Vector3(0.5f, -1f, 0) * _speed * Time.deltaTime);
+        */
     }
 
 }
